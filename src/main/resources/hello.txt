@@ -1,0 +1,7 @@
+hello world
+hello world
+hi world
+inputPath getClass getResource
+wordCountDS AggregateDataSet String Int  inputDS flatMap split
+String Int  inputDS flatMap split
+wordCountDS
