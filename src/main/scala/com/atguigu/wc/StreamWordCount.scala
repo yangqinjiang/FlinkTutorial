@@ -27,3 +27,7 @@ object StreamWordCount {
     // 启动 executor，执行任务
     env.execute("Socket stream word count")
   } }
+
+
+// windows执行命令： nc -l -p 7777
+// linux : nc -lk 7777
