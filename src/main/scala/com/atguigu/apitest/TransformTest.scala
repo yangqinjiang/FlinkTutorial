@@ -38,6 +38,7 @@ object TransformTest {
       SensorReading(dataArray(0).trim,dataArray(1).trim.toLong,dataArray(2).trim.toDouble)
     })
 
+    //keyBy: 逻辑地将一个流拆分成不相交的分区，每个分区包含具有相同 key 的元素，在内部以 hash 的形式实现的
     dataStream
       //.keyBy(0)// 按id分组，得到KeyedStream
         .keyBy(_.id)//常用
