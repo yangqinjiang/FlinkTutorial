@@ -3,11 +3,12 @@ package com.atguigu.apitest
 import com.atguigu.apitest.SourceTest.getClass
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor
-import org.apache.flink.streaming.api.functions.{AssignerWithPeriodicWatermarks, AssignerWithPunctuatedWatermarks}
+import org.apache.flink.streaming.api.functions.{AssignerWithPeriodicWatermarks, AssignerWithPunctuatedWatermarks, KeyedProcessFunction}
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.watermark.Watermark
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
+import org.apache.flink.util.Collector
 
 object WindowTest {
   def main(args: Array[String]): Unit = {
@@ -52,6 +53,8 @@ object WindowTest {
         .reduce((data1,data2)=>(data1._1,data1._2.min(data2._2))) //用reduce做增量聚合
     minTempPerWindowsStream.print("min Temp ")
     dataStream.print("input data")
+    dataStream.keyBy(_.id)
+        .process(new MyProcess())
 
     env.execute("window test")
   }
@@ -77,5 +80,20 @@ class MyAssigner2() extends AssignerWithPunctuatedWatermarks[SensorReading]{
 
   override def extractTimestamp(t: SensorReading, l: Long): Long = {
     t.timestamp * 1000
+  }
+}
+//自定义处理函数
+//三个泛型, key的类型，输入数据的类型，输出数据的类型
+class MyProcess extends KeyedProcessFunction[String,SensorReading,String]{
+  //处理每一个数据时
+  override def processElement(value: SensorReading,
+                              ctx: KeyedProcessFunction[String, SensorReading, String]#Context,
+                              out: Collector[String]): Unit = {
+    //定时2s,执行定时器
+    ctx.timerService().registerEventTimeTimer(2000L)
+  }
+
+  override def onTimer(timestamp: Long, ctx: KeyedProcessFunction[String, SensorReading, String]#OnTimerContext, out: Collector[String]): Unit = {
+    // 2s后执行
   }
 }
