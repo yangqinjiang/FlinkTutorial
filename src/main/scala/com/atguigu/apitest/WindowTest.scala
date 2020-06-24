@@ -6,6 +6,7 @@ import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrderness
 import org.apache.flink.streaming.api.functions.{AssignerWithPeriodicWatermarks, AssignerWithPunctuatedWatermarks}
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.watermark.Watermark
+import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows
 import org.apache.flink.streaming.api.windowing.time.Time
 
 object WindowTest {
@@ -42,8 +43,12 @@ object WindowTest {
     val minTempPerWindowsStream = dataStream
       .map( data => (data.id,data.temperature))
         .keyBy(_._1)
+      //每10s输出一次
 //        .timeWindow(Time.seconds(10))//开滚动时间窗口,事件时间
-      .timeWindow(Time.seconds(10),Time.seconds(5))//开滑动时间窗口,事件时间
+      //开滑动时间窗口,事件时间: 统计15s内的最小温度，隔5s输出一次
+      .timeWindow(Time.seconds(15),Time.seconds(5))
+      //等价于：
+      //.window(SlidingEventTimeWindows.of(Time.seconds(15),Time.seconds(5)))
         .reduce((data1,data2)=>(data1._1,data1._2.min(data2._2))) //用reduce做增量聚合
     minTempPerWindowsStream.print("min Temp ")
     dataStream.print("input data")
